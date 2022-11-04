@@ -1,4 +1,23 @@
+import { MenuItem } from "@prisma/client";
 import App from "../../app";
+
+type ItemResult = MenuItem & {
+    level?: number
+    children?: ItemResult[]
+}
+
+const getItem = (items: MenuItem[], id: number): ItemResult => {
+    return items.filter(item => item.id == id)[0]
+}
+
+const getLevel = (items: MenuItem[], item: MenuItem): number => {
+    if (item.parentId) {
+        return 1 + getLevel(items, getItem(items, item.parentId))
+    }
+
+    return 1
+}
+
 
 export class MenuItemsService {
   constructor(protected app: App) {}
@@ -78,7 +97,42 @@ export class MenuItemsService {
     ]
   */
 
+  getLevel(item: MenuItem): number {
+    if (!item.parentId) {
+        return 1
+    } else {
+        return 1 + this.getLevel(item)
+    }
+  }
+
   async getMenuItems() {
-    throw new Error('TODO in task 3');
+    const itemLevel: Record<string, number>[] = []
+    const menuItems: ItemResult[] = await this.app.getDataSource().menuItem.findMany();
+
+    for (let i = 0; i < menuItems.length; i++) {
+        const menuItem = menuItems[i]
+        itemLevel.push({
+            id: menuItem.id,
+            level: getLevel(menuItems, menuItem)
+        })
+    }
+
+    itemLevel.sort((a, b) => (a.level > b.level ? -1 : 1)).forEach(item => {
+        const menuItem = getItem(menuItems, item.id)
+        const currentIndex: number = menuItems.findIndex(item => item.id === menuItem.id)
+
+        if (menuItem.parentId) {
+            const parentItem = getItem(menuItems, menuItem.parentId)
+            const parentIndex = menuItems.findIndex(item => item.id === parentItem.id)
+
+            if (!menuItems[parentIndex].children == undefined) {
+                menuItems[parentIndex].children = []
+            }
+            menuItems[parentIndex].children?.push(menuItem)
+            menuItems.splice(currentIndex, 1)
+        }
+    })
+
+    return menuItems
   }
 }

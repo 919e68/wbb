@@ -20,11 +20,13 @@ model Event {
 }
 
 model MenuItem {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
   url       String
   parentId  Int?
-  createdAt DateTime @default(dbgenerated("CURRENT_TIMESTAMP"))
+  createdAt DateTime   @default(dbgenerated("CURRENT_TIMESTAMP"))
+  parent    MenuItem?  @relation("children", fields: [parentId], references: [id])
+  children  MenuItem[] @relation("children")
 
   @@map("menu_items")
 }
