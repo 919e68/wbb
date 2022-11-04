@@ -85,7 +85,11 @@ export class EventsService {
      */
 
   async getEventsWithWorkshops() {
-    throw new Error('TODO task 1');
+    return await this.app.getDataSource().event.findMany({
+      include: {
+        workshops: true
+      }
+    });
   }
 
   /* TODO: complete getFutureEventWithWorkshops so that it returns events with workshops, that have not yet started
@@ -155,6 +159,30 @@ export class EventsService {
     ```
      */
   async getFutureEventWithWorkshops() {
-    throw new Error('TODO task 2');
+    const filteredEvents = await this.app.getDataSource().workshop.groupBy({
+      by: ['eventId'],
+      where: {
+        start: {
+          gt: new Date()
+        }
+      }
+    });
+
+    return await this.app.getDataSource().event.findMany({
+      where: {
+        id: {
+          in: filteredEvents.map(event => event.eventId)
+        }
+      },
+      include: {
+        workshops: {
+          where: {
+            start: {
+              gt: new Date()
+            }
+          }
+        }
+      }
+    });
   }
 }
