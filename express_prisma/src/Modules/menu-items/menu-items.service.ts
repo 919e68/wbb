@@ -125,7 +125,8 @@ export class MenuItemsService {
             const parentItem = getItem(menuItems, menuItem.parentId)
             const parentIndex = menuItems.findIndex(item => item.id === parentItem.id)
 
-            if (!menuItems[parentIndex].children == undefined) {
+
+            if (menuItems[parentIndex].children == undefined) {
                 menuItems[parentIndex].children = []
             }
             menuItems[parentIndex].children?.push(menuItem)
